@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: db-config
+data:
+  name: docker
+  url: jdbc:mariadb://springdb-mysql:3306/docker
+  user: docker
+  rootpassword: docker
+  password: docker

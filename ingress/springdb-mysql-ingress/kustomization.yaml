@@ -1,0 +1,9 @@
+secretGenerator:
+- name: mysql-pass
+  literals:
+  - password=docker
+  - username=docker
+  - databasename=docker
+  - rootpassword=docker
+resources:
+  - mysql-deployment.yaml

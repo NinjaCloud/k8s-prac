@@ -1,0 +1,7 @@
+resources:
+  - api-unigps-v1.yaml
+  - service-v1.yaml
+  - deployment-v1.yaml
+#  - api-unigps-v1v2.yaml
+#  - service-v2.yaml
+#  - deployment-v2.yaml

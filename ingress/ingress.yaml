@@ -1,0 +1,32 @@
+apiVersion: networking.k8s.io/v1beta1 # for versions before 1.14 use extensions/v1beta1
+kind: Ingress
+metadata:
+  name: rajeshg.brainupgrade.in
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/rewrite-target: /$1
+    nginx.ingress.kubernetes.io/use-regex: "true"
+    kubernetes.io/tls-acme: "true"
+    nginx.ingress.kubernetes.io/enable-cors: "true"
+    kubernetes.io/ingress.class: "nginx"
+spec:
+  tls:
+  - hosts:
+    - rajeshg.brainupgrade.in
+    secretName: rajeshg.brainupgrade.in
+  rules:
+    - host: rajeshg.brainupgrade.in
+      http:
+        paths:
+          - path: /?(.*)
+            backend:
+              serviceName: api-v1
+              servicePort: 8080
+          - path: /api/?(.*)
+            backend:
+              serviceName: api-v2
+              servicePort: 8080             
+          - path: /springdb/?(.*)
+            backend:
+              serviceName: springdb
+              servicePort: 80                           

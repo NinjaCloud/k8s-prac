@@ -1,0 +1,46 @@
+apiVersion: apps/v1 # for versions before 1.9.0 use apps/v1beta2
+kind: Deployment
+metadata:
+  name: springdb
+  labels:
+    app: springdb
+spec:
+  selector:
+    matchLabels:
+      app: springdb
+      tier: frontend
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: springdb
+        tier: frontend
+    spec:
+      containers:
+      - image: rajeshgheware/spring-db:1.0.2
+        name: springdb
+        env:
+        - name: spring.datasource.url
+          valueFrom:
+            configMapKeyRef:
+              name: db-config
+              key: url
+        - name: spring.datasource.username
+          valueFrom:
+            configMapKeyRef:
+              name: db-config
+              key: user
+        - name: spring.datasource.password
+          valueFrom:
+            configMapKeyRef:
+              name: db-config
+              key: password
+            # secretKeyRef:
+            #   name: secret-config
+            #   key: password
+        - name: server.port
+          value: "80"  
+        ports:
+        - containerPort: 80
+          name: springdb
