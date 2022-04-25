@@ -13,6 +13,6 @@ spec:
   - name: hostpath-volume
     hostPath:
       # directory location on host
-      path: /data
+      path: /home/ninad/volume
       # this field is optional
       type: DirectoryOrCreate
