@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  creationTimestamp: null
+  labels:
+    run: ninad
+  name: ninad
+spec:
+  containers:
+  - args:
+    - /bin/sh
+    - -c
+    - ping google.com
+    image: busybox
+    name: ninad
+    resources: {}
+  dnsPolicy: ClusterFirst
+  restartPolicy: Always
+status: {}
