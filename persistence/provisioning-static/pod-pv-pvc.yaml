@@ -4,7 +4,7 @@ metadata:
   name: pod-pv-pvc
 spec:
   volumes:
-    - name: pv-storage
+    - name: pv-hostpath
       persistentVolumeClaim:
         claimName: pvc-test
   containers:
@@ -15,4 +15,4 @@ spec:
           name: "http-server"
       volumeMounts:
         - mountPath: "/usr/share/nginx/html"
-          name: pv-storage
+          name: pv-hostpath
