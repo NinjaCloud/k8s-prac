@@ -5,7 +5,7 @@ metadata:
   labels:
     app: nginx
 spec:
-  storageClassName: storageclass-generic
+  storageClassName: standard
   accessModes:
     - ReadWriteOnce
   resources:

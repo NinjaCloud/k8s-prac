@@ -3,11 +3,11 @@ kind: StatefulSet
 metadata:
   name: web
 spec:
-  serviceName: "nginx"
-  replicas: 3 # by default is 1
   selector:
     matchLabels:
-      app: nginx
+      app: nginx # has to match .spec.template.metadata.labels
+  serviceName: "nginx"
+  replicas: 3 # by default is 1
   template:
     metadata:
       labels:
@@ -28,6 +28,7 @@ spec:
       name: www
     spec:
       accessModes: [ "ReadWriteOnce" ]
+      storageClassName: "standard"
       resources:
         requests:
           storage: 1Gi
