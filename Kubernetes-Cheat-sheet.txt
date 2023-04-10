@@ -1,0 +1,328 @@
+Kubernetes Essentials - 2 Days
+
+Lab 8: Kubernetes Operations on AWS
+Task 2: Setting up a Kubernetes Cluster
+
+wget https://kops-script.s3.amazonaws.com/kops-v1.25.sh
+. ./kops-v1.25.sh
+export KOPS_STATE_STORE=s3://< Your Cluster_Name >
+kops validate cluster
+sudo hostnamectl set-hostname kops
+
+Lab 1: Services in Kubernetes
+Task 1: Create a Pod using a YAML file
+
+kubectl get nodes
+kubectl get nodes -o wide
+
+wget https://hpe-content.s3.ap-south-1.amazonaws.com/httpd-pod.yaml
+
+kubectl create -f httpd-pod.yaml
+kubectl get pods
+kubectl get pods -o wide
+kubectl get pod httpd-pod -o yaml
+kubectl describe pod httpd-pod 
+kubectl get pods --show-labels
+
+Task 2: Setup ClusterIP service
+
+wget https://hpe-content.s3.ap-south-1.amazonaws.com/httpd-svc.yaml
+
+kubectl apply -f httpd-svc.yaml
+kubectl get services
+kubectl describe svc httpd-svc
+kubectl get ep 
+kubectl get svc httpd-svc
+
+curl http://< replace Cluster_IP>:< replace Service_Port>
+
+kubectl get nodes -owide | awk '{print $7}'
+
+ssh -t admin@< replace Node_IP> curl < replace Cluster_IP>:< replace Service_Port>
+
+Task 3: Setup NodePort service
+
+vi httpd-svc.yaml
+
+# Replace the content of httpd-svc.yaml with below content use ESc and :wq! to quit vi
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: httpd-svc
+spec:
+  selector:
+    env: prod 
+    type: frontend
+    app: httpd-ws
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 80
+  type: NodePort
+
+# End of file
+
+kubectl apply -f httpd-svc.yaml
+
+kubectl get svc 
+kubectl describe svc httpd-svc
+kubectl get nodes -owide | grep node | awk '{print $7}'
+curl http://<Your NODE_EXTERNAL_IP>:<Your NodePort>
+
+Task 4: Setup LoadBalancer service
+
+vi httpd-svc.yaml
+
+# Replace the content of httpd-svc.yaml with below content use ESc and :wq! to quit vi
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: httpd-svc
+spec:
+  selector:
+    env: prod
+    type: frontend
+    app: httpd-ws
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 80
+  type: LoadBalancer
+
+
+# End of file
+
+kubectl apply -f httpd-svc.yaml
+kubectl describe svc httpd-svc
+curl http://<Your LoadBalancer_Ingress>:<Your Service_Port>
+
+Task 5: Delete and recreate httpd Pod
+
+kubectl get pod httpd-pod -o wide
+kubectl describe svc httpd-svc
+kubectl delete pod httpd-pod
+kubectl describe svc httpd-svc
+kubectl create -f httpd-pod.yaml
+kubectl get pod httpd-pod -o wide
+kubectl describe svc httpd-svc
+
+Task 6: Clean-up
+
+kubectl delete -f httpd-pod.yaml
+kubectl delete -f httpd-svc.yaml
+
+
+Lab 2: Deployment
+Task 1: Write a Deployment YAML and Apply it
+
+wget https://hpe-content.s3.ap-south-1.amazonaws.com/dep-nginx.yaml
+kubectl apply -f dep-nginx.yaml
+kubectl get deployments
+kubectl get rs
+kubectl get pods
+
+kubectl exec -it <replace pod_name> -- /bin/bash
+nginx -v
+exit
+
+Task 2: Update the Deployment with a newer image
+
+kubectl set image deployment/nginx-dep nginx-ctr=nginx:1.11 --record
+kubectl describe deployments
+kubectl get pods
+
+kubectl exec -it <replace pod_name> -- /bin/bash
+nginx -v
+exit
+
+Task 3: Rollback of Deployment 
+
+kubectl rollout history deployment/nginx-dep
+kubectl rollout undo deployment/nginx-dep --to-revision=1
+kubectl get pods
+
+kubectl exec -it <replace pod_name> -- /bin/bash
+nginx -v
+exit
+
+Task 4: Scaling of Deployments
+
+kubectl get deployments
+kubectl get pods
+
+kubectl scale deployment nginx-dep --replicas=8
+kubectl get deployments
+kubectl get pods
+
+kubectl scale deployment nginx-dep --replicas=2
+kubectl get deployments
+kubectl get pods
+
+kubectl delete -f dep-nginx.yaml
+
+
+Lab 3: DaemonSet in Kubernetes
+
+wget https://hpe-content.s3.ap-south-1.amazonaws.com/ds-pod.yaml
+
+kubectl apply -f ds-pod.yaml
+kubectl get ds fluent-ds
+kubectl get pods -o wide
+kubectl delete -f ds-pod.yaml
+
+Lab 4: Persistent Volume in Kubernetes
+
+Task 1: Get Node Label and Create Custom Index.html on Node
+
+kubectl get nodes --show-labels | grep role=node
+kubectl get nodes -o wide | grep node
+ssh admin@< replace selected node_public_IP>
+sudo su
+mkdir /pvdir
+echo Hello World! > /pvdir/index.html
+exit
+exit
+
+Task 2: Create a Local Persistent Volume
+
+wget https://hpe-content.s3.ap-south-1.amazonaws.com/pv-volume.yaml
+kubectl apply -f pv-volume.yaml
+kubectl get pv 
+
+Task 3: Create a PersistentVolumeClaim
+
+wget https://hpe-content.s3.ap-south-1.amazonaws.com/pv-claim.yaml
+kubectl apply -f pv-claim.yaml
+kubectl get pvc 
+kubectl get pv
+
+Task 4: Create nginx Pod with NodeSelector
+
+wget https://hpe-content.s3.ap-south-1.amazonaws.com/pv-pod.yaml
+
+vi pv-pod.yaml
+# Replace the <Your Node Hostname> with the nodename in which you created index.html. Press ESc and :wq! to save and exit vi
+
+kubectl apply -f pv-pod.yaml
+kubectl get pods -o wide
+kubectl exec -it pv-pod -- /bin/bash 
+apt-get update
+apt-get install curl -y
+curl localhost
+
+kubectl delete -f pv-pod.yaml
+kubectl delete -f pv-claim.yaml
+kubectl delete -f pv-volume.yaml
+
+Lab 5: StatefulSet Implementation
+Task 1:  Creating a StatefulSet
+
+wget files.cloudthat.training/devops/kubernetes-essentials/nginx-sts.yaml
+
+kubectl apply -f nginx-sts.yaml
+
+kubectl get service nginx-svc 
+kubectl get statefulset nginx-sts
+kubectl get pods -w -l app=nginx-sts
+
+for i in 0 1; do kubectl exec "nginx-sts-$i" -- sh -c 'hostname'; done
+
+kubectl run -i --tty --image busybox:1.28 dns-test --restart=Never --rm
+
+nslookup nginx-sts-0.nginx-svc
+nslookup nginx-sts-1.nginx-svc
+
+exit
+
+kubectl delete pod -l app=nginx-sts
+kubectl get pod -w -l app=nginx-sts
+
+for i in 0 1; do kubectl exec "nginx-sts-$i" -- sh -c 'hostname'; done
+
+Task 2: Writing to a Scalable Storage
+
+kubectl get pvc -l app=nginx-sts
+
+for i in 0 1; do kubectl exec "nginx-sts-$i" -- sh -c 'echo "$(hostname)" > /usr/share/nginx/html/index.html'; done
+
+for i in 0 1; do kubectl exec -i -t "nginx-sts-$i" -- curl http://localhost/; done
+
+Task 3: Scaling StatefulSet
+
+kubectl scale sts nginx-sts --replicas=5
+kubectl get pods -w -l app=nginx-sts
+
+kubectl get pods -l app=nginx-sts
+kubectl get pvc -l app=nginx-sts
+
+kubectl edit sts nginx-sts
+
+# Set spec: replicas to 3, Press Esc and :wq! to exit vi
+
+kubectl get pods -w -l app=nginx-sts
+kubectl get pvc -l app=nginx-sts
+
+Task 4: Rolling Update
+
+kubectl edit sts nginx-sts
+
+# Change the spec: conatiners: image value to nginx:latest, Press Esc and :wq! to exit vi
+
+kubectl get pod -l app=nginx-sts -w
+kubectl get pods
+kubectl describe pod nginx-sts-0 | grep Image
+kubectl delete -f nginx-sts.yaml
+
+Task 5: Clean-up Resources
+
+kubectl delete -f nginx-sts.yaml 
+
+Lab 6: Namespaces and Resource Quotas in Kubernetes
+
+Task 1: Creating a Namespace
+kubectl create namespace quotas
+kubectl get namespaces 
+
+Task 2: Creating a resourcequota
+wget https://hpe-content.s3.ap-south-1.amazonaws.com/rq-quotas.yaml
+
+Task 3: Verify resourcequota Functionality
+wget https://hpe-content.s3.ap-south-1.amazonaws.com/rq-pod.yaml
+
+
+Additional Topic: Installing Helm 3 in Ubuntu Linux and installing wordpress through Helm.
+
+wget files.cloudthat.training/devops/kubernetes-essentials/helm.sh
+cat helm.sh
+bash helm.sh
+helm version
+helm repo add bitnami https://charts.bitnami.com/bitnami
+helm repo update
+helm repo list
+helm search repo wordpress
+helm install wordpress-chart bitnami/wordpress
+helm uninstall wordpress-chart
+
+
+####### IMPORTANT - DELETE THE CLUSTER FROM AWS #######
+
+kops delete cluster <Your Cluster_Name> --yes
+
+#if the command shows error, try
+
+export KOPS_STATE_STORE=s3://< Your Cluster_Name >
+kops validate cluster
+kops delete cluster <Your Cluster_Name> --yes
+
+# Verify all the AWS resources are deleted from AWS Console, in case of any confusions, feel free to reach us. 
+
+
+
+
+
+
+
+
+
