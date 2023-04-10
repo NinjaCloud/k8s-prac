@@ -1,0 +1,125 @@
+Lab 1
+vi nginx-rc.yaml
+
+
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  name: nginx
+spec:
+  replicas: 3
+  selector:
+    app: nginx
+  template:
+    metadata:
+      name: nginx
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.12.2
+        ports:
+        - containerPort: 80
+
+
+
+kubectl create -f nginx-rc.yaml
+
+kubectl get pods 
+
+kubectl rolling-update nginx --image=nginx
+
+kubectl get pods 
+
+kubectl delete pods <pod_name>
+
+kubectl get pods 
+
+kubectl edit rc nginx
+
+kubectl get pods 
+
+kubectl delete -f nginx-rc.yaml 
+
+
+
+
+
+Lab 2. 
+
+kubectl create deployment nginx --image=nginx:1.15 --replicas=5
+kubectl get deployment/nginx
+Kubectl edit deploy nginx
+kubectl describe deployment/nginx
+kubectl rollout history deployment/nginx
+kubectl set image deployment/nginx nginx=nginx:1.16
+kubectl rollout history deployment/nginx
+kubectl rollout undo deployment/nginx
+kubectl rollout undo deployment/nginx --to-revision=2
+kubectl scale --replicas=50 deployment/nginx
+kubectl rollout pause deployment/nginx
+kubectl rollout status deployment/nginx
+kubectl rollout resume deployment/nginx
+
+
+
+Lab 3.
+
+vi hpa-deploy.yaml
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  labels:
+    app: nginx-deployment
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: nginx-deployment
+  template:
+    metadata:
+      labels:
+        app: nginx-deployment
+    spec:
+      containers:
+      - image: nginx
+        name: nginx
+        resources:
+          limits:
+            cpu: 200m
+            memory: 100Mi
+          requests:
+            cpu: 100m
+            memory: 50Mi
+
+
+kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
+
+kubectl create -f hpa-deploy.yaml
+
+kubectl get deployments
+
+kubectl top pods
+
+kubectl autoscale deployment nginx-deployment --min=3 --max=6 --cpu-percent=50
+
+kubectl get hpa
+
+kubectl describe hpa nginx-deployment
+
+kubectl exec -it <pod_name> bash
+
+# while true; do true; done
+
+kubectl get hpa nginx-deployment
+
+kubectl get deployments nginx-deployment
+
+kubectl describe hpa nginx-deployment
+
+kubectl delete hpa nginx-deployment
+
+kubectl delete deployments nginx-deployment
