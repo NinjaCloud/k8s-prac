@@ -1,0 +1,39 @@
+vi configmap.yml
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: my-config
+  namespace: default
+data:
+  mydata: hello_world
+
+
+kubectl create -f configmap.yml
+
+vi configmap-pod.yml
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: cm-pod
+spec:
+  containers:
+  - name: nginx
+    image: nginx
+    ports:
+    - containerPort: 80
+    env:
+      - name: hlo 
+        valueFrom:
+          configMapKeyRef:
+            name: my-config
+            key: mydata
+
+
+kubectl create -f configmap-pod.yml
+
+kubectl exec -it cm-pod printenv
+
+kubectl delete -f configmap-pod.yml
+kubectl delete -f configmap.yml
