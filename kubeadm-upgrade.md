@@ -13,7 +13,6 @@ Upgrade a Kubernetes cluster created using **kubeadm** from **version 1.32.2** t
 * SSH access to all nodes
 * Root or sudo privileges
 * Cluster health should be **Healthy**
-* Backup of important manifests (`/etc/kubernetes/`)
 
 ---
 
